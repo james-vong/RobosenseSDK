@@ -1,4 +1,4 @@
-# RoboSense AC1 on Windows: patched rs_driver + tools
+# RoboSense AC1 SDK: patched rs_driver + tools (Windows and Linux)
 
 A working Windows build of RoboSense's `rs_driver` (branch `dev_opt_AC1`) for the AC1 Active Camera, with the
 fixes we needed to make it run on a laptop, plus the capture / viewer tools built on it. Everything here was
@@ -21,6 +21,20 @@ If the stock driver "refuses" on your laptop, it is almost always one of the fou
    prebuilt\demo_ac1_dump.exe --usb200 --seconds 10 --out captures\test
    ```
    `--usb200` lets the driver start on a USB 2.0 link (it refuses otherwise). Omit on USB 3.
+
+
+## Linux (Debian 13 arm64 verified on the Amlogic MB41, 2026-11-18)
+
+No driver binding step: libusb opens the device directly. Needs `gcc g++ cmake make libudev-dev`.
+```
+sudo cp 99-robosense-ac1.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules   # open AC1 without sudo
+./build_linux.sh                                   # -> rs_driver/build/demo/demo_usb, demo_ac1_dump, demo_ac1_stream
+rs_driver/build/demo/demo_ac1_dump --usb200 --seconds 10 --out captures/test
+```
+`demo_ac1_stream` serves frames over TCP (`--port`, `--uuid`), so a Python viewer on another machine can attach;
+bind is 127.0.0.1 by default. Check enumeration with `lsusb` (look for `3840:1010`) and `sudo dmesg | grep usb`.
+"Cannot enable. Maybe the USB cable is bad?" from the kernel means the port never completed link training: try
+the USB 3 port, a different cable, and confirm the AC1 has its 12 V supply.
 
 ## What is different from upstream (RoboSense-LiDAR/rs_driver @ dev_opt_AC1, see UPSTREAM_COMMIT.txt)
 
@@ -54,6 +68,7 @@ paths at the top if yours differs.
 
 | Tool | What |
 |---|---|
+| `prebuilt-linux-arm64/` | Same three demos built on the MB41 (Debian 13 arm64); `chmod +x` after checkout. |
 | `tools/probe_ac1.py` | Enumerate AC1s via libusb: serial, negotiated USB speed, per-interface claim test. First thing to run. |
 | `tools/live_view.py` | OpenCV live window: camera, LiDAR front view, top-down map, IMU. |
 | `tools/rerun_view.py` | Live Rerun viewer, points colored from the camera; `--uuid` to pick a unit. |

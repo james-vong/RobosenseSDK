@@ -1,0 +1,3 @@
+# RoboSense AC1 (VID 3840 PID 1010): let non-root users open it via libusb.
+# Install: sudo cp 99-robosense-ac1.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules
+SUBSYSTEM=="usb", ATTR{idVendor}=="3840", ATTR{idProduct}=="1010", MODE="0666", GROUP="plugdev"

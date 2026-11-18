@@ -1,0 +1,64 @@
+diff --git a/demo/CMakeLists.txt b/demo/CMakeLists.txt
+index 9f2cfa6..fd1add2 100644
+--- a/demo/CMakeLists.txt
++++ b/demo/CMakeLists.txt
+@@ -37,6 +37,19 @@ add_executable(demo_usb
+ 
+ target_link_libraries(demo_usb
+                     ${EXTERNAL_LIBS})
++
++# --- added for the LiDAR project: capture/dump demo kept in ../../tools ---
++add_executable(demo_ac1_dump
++              ${CMAKE_CURRENT_LIST_DIR}/../../tools/demo_ac1_dump.cpp)
++
++target_link_libraries(demo_ac1_dump
++                    ${EXTERNAL_LIBS})
++
++add_executable(demo_ac1_stream
++              ${CMAKE_CURRENT_LIST_DIR}/../../tools/demo_ac1_stream.cpp)
++
++target_link_libraries(demo_ac1_stream
++                    ${EXTERNAL_LIBS})
+ endif()
+ 
+ if(NOT ${DISABLE_PCAP_PARSE})
+diff --git a/src/rs_driver/driver/input/input_usb.cpp b/src/rs_driver/driver/input/input_usb.cpp
+index 88fd48f..2e7352c 100644
+--- a/src/rs_driver/driver/input/input_usb.cpp
++++ b/src/rs_driver/driver/input/input_usb.cpp
+@@ -255,13 +255,15 @@ bool InputUsb::findDevices(std::string device_uuid)
+           libusb_close(handle);
+         }
+ 
++        // LiDAR-project patch (2026-10-21): with two AC1s connected the original code returned false as soon
++        // as it met a unit whose serial did not match (even after a match). Skip non-matching units instead,
++        // and stop at the first match.
+         if (device_uuid == "")
+         {
+           _dev = device;
+           libusb_ref_device(device);
+           find_flag = true;
+           RS_INFO << "Find device, uuid is : " << uuid_ << RS_REND;
+-
+         }
+         else if (device_uuid == uuid_)
+         {
+@@ -272,7 +274,8 @@ bool InputUsb::findDevices(std::string device_uuid)
+         }
+         else
+         {
+-          return false;
++          RS_INFO << "Skip device : " << uuid_ << " (want " << device_uuid << ")" << RS_REND;
++          continue;
+         }
+ 
+         if (desc.bcdUSB >= 0x0300)
+@@ -285,7 +288,7 @@ bool InputUsb::findDevices(std::string device_uuid)
+           // RS_INFO << "USB mode is USB2.0" << RS_REND;
+           _is_usb_300 = false;
+         }
+-          
++        break;  // first match wins
+       }
+   }
+ 

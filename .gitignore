@@ -1,0 +1,7 @@
+rs_driver/build/
+captures/
+*.log
+__pycache__/
+.venv/
+*.rrd
+*.npy

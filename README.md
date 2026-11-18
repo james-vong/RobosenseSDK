@@ -25,6 +25,11 @@ If the stock driver "refuses" on your laptop, it is almost always one of the fou
 
 ## Linux (Debian 13 arm64 verified on the Amlogic MB41, 2026-11-18)
 
+Verified end to end with a sensor on the MB41 on 2026-11-18: `demo_ac1_dump` over USB 2.0 high speed gave
+100 clouds, 251 camera frames (640x480) and 997 IMU samples in 11 s with no driver errors, and
+`demo_ac1_stream` on the board fed a Rerun viewer on a laptop through `ssh -L 5577:127.0.0.1:5577`
+(streamer CPU about 5 % of one core).
+
 No driver binding step: libusb opens the device directly. Needs `gcc g++ cmake make libudev-dev`.
 ```
 sudo cp 99-robosense-ac1.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules   # open AC1 without sudo
